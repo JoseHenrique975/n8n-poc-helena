@@ -25,6 +25,9 @@ export class HelenaTest implements INodeType {
 				required: true,
 			},
 		],
+		requestDefaults: {
+			baseURL: 'https://api-test.helena.run',
+		},
 		properties: [
 			{
 				displayName: 'Resource',
@@ -52,10 +55,16 @@ export class HelenaTest implements INodeType {
 				default: 'message',
 				description: 'Resource to use.',
 			},
+
 			{
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['contact']
+					}
+				},
 				options: [
 					{
 						name: 'Get All Contacts',
@@ -80,12 +89,25 @@ export class HelenaTest implements INodeType {
 						value: 'createContact',
 						description: 'Create contact',
 						action: 'Create contact'
+					}],
+					default: ''
+				}, 
+				{
+					displayName: 'Operation',
+					name: 'operation',
+					type: 'options',
+					displayOptions: {
+						show: {
+							resource: ['message']
+						}
 					},
+					options: [
+				
 					{
 						name: 'Get Message By Id',
 						value: 'getMessageById',
 						description: 'Get message by id',
-						action: 'Get message'
+						action: 'Get message',
 					},
 					{
 						name: 'Get Message Status',
@@ -116,53 +138,80 @@ export class HelenaTest implements INodeType {
 						value: 'sendMessageTemplate',
 						description: 'Send Template',
 						action: 'Send Template'
+					}],
+					default: ''
+				}, 
+				{
+					displayName: 'Operation',
+					name: 'operation',
+					type: 'options',
+					displayOptions: {
+						show: {
+							resource: ['panel']
+						}
 					},
-					{
-						name: 'Get All Sessions',
-						value: 'getAllSessions',
-						description: 'Get all sessions',
-						action: 'List Sessions'
-					},
-					{
-						name: 'Gel All Annotation',
-						value: 'getAllAnnotation',
-						description: 'Get all notes from a card',
-						action: 'List notes from a card'
-					},
-					{
-						name: 'Create Card',
-						value: 'createCard',
-						description: 'Create card in panel',
-						action: 'Create Card'
-					},
-					{
-						name: 'Create Annotation Text',
-						value: 'createAnnotationText',
-						description: 'Create annotation text',
-						action: 'Create Annotation Text'
-					},
-					{
-						name: 'Create Annotation File',
-						value: 'createAnnotationFile',
-						description: 'Create annotation file',
-						action: 'Create Annotation File'
-					},
-					{
-						name: 'Update Session',
-						value: 'updateSession',
-						description: 'Update Session',
-						action: 'Update Session'
-					},
-					{
-						name: 'Update Status Session',
-						value: 'updateStatusSession',
-						description: 'Update status session',
-						action: 'Update Status Session'
-					}
-				],
-				default: '',
-				description: 'Operation to perform.',
-			},
+					options: [
+						{
+							name: 'Gel All Annotation',
+							value: 'getAllAnnotation',
+							description: 'Get all notes from a card',
+							action: 'List notes from a card'
+						},
+						{
+							name: 'Create Card',
+							value: 'createCard',
+							description: 'Create card in panel',
+							action: 'Create Card'
+						},
+						{
+							name: 'Create Annotation Text',
+							value: 'createAnnotationText',
+							description: 'Create annotation text',
+							action: 'Create Annotation Text'
+						},
+						{
+							name: 'Create Annotation File',
+							value: 'createAnnotationFile',
+							description: 'Create annotation file',
+							action: 'Create Annotation File'
+						}
+					],
+					default: ''
+				},
+				{
+						displayName: 'Operation',
+						name: 'operation',
+						type: 'options',
+						displayOptions: {
+							show: {
+								resource: ['session']
+							}
+						},
+						options: [
+							{
+								name: 'Get All Sessions',
+								value: 'getAllSessions',
+								description: 'Get all sessions',
+								action: 'List Sessions'
+							},
+							
+							{
+								name: 'Update Session',
+								value: 'updateSession',
+								description: 'Update Session',
+								action: 'Update Session'
+							},
+							{
+								name: 'Update Status Session',
+								value: 'updateStatusSession',
+								description: 'Update status session',
+								action: 'Update Status Session'
+							}
+						],
+						default: ''
+				},
+				
+				/*ELEMENTOS DE INTERFACE USUÁRIO*/
 			{
 				displayName: 'Panel',
 				name: 'panels',
