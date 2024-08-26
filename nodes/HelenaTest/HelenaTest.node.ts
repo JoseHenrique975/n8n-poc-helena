@@ -2,7 +2,9 @@ import { IExecuteFunctions, ILoadOptionsFunctions, INodeExecutionData, INodeType
 import axios from 'axios';
 import { HelenCoreService } from './helena-core.service';
 import { HelenChatService } from './helena-chat.service';
+import { HelenCrmService } from './helena-crm.service';
 
+/*REFATORAR EXECUTES DEPOIS*/
 export class HelenaTest implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'WTS Chat',
@@ -28,6 +30,7 @@ export class HelenaTest implements INodeType {
 				displayName: 'Resource',
 				name: 'resource',
 				type: 'options',
+				noDataExpression: true,
 				options: [
 					{
 						name: 'Contact',
@@ -46,7 +49,7 @@ export class HelenaTest implements INodeType {
 						value: 'panel'
 					}
 				],
-				default: '',
+				default: 'message',
 				description: 'Resource to use.',
 			},
 			{
@@ -58,60 +61,189 @@ export class HelenaTest implements INodeType {
 						name: 'Get All Contacts',
 						value: 'getAllContacts',
 						description: 'Fetch all contacts from the API',
-						displayOptions: {
-							show: {
-								operation: ['contact'],
-							},
-						},
+						action: 'List Contacts',
 					},
 					{
 						name: 'Get By Id',
 						value: 'getContactById',
-						description: 'Get contact by id'
+						description: 'Get contact by id',
+						action: 'Get Contact by id',
 					},
 					{
 						name: 'Get By Phone',
 						value: 'getContactByPhone',
 						description: 'Get contact by phonenumber',
+						action: 'Get contact by phone'
 					},
 					{
 						name: 'Create Contact',
 						value: 'createContact',
 						description: 'Create contact',
+						action: 'Create contact'
 					},
 					{
 						name: 'Get Message By Id',
 						value: 'getMessageById',
 						description: 'Get message by id',
+						action: 'Get message'
 					},
 					{
 						name: 'Get Message Status',
 						value: 'getMessageStatus',
 						description: 'Get message status',
+						action: 'Get message status'
 					},
 					{
 						name: 'Get All Messages',
 						value: 'getAllMessages',
 						description: 'Get all messages',
+						action: 'List messages'
 					},
 					{
 						name: 'Send Message Text',
 						value: 'sendMessageText',
 						description: 'Send text',
+						action: 'Send Text'
+					},
+					{
+                        name: 'Send Message File',
+						value: 'sendMessageFile',
+						description: 'Send File',
+						action: 'Send File'
+					},
+					{
+						name: 'Send Message Template',
+						value: 'sendMessageTemplate',
+						description: 'Send Template',
+						action: 'Send Template'
 					},
 					{
 						name: 'Get All Sessions',
 						value: 'getAllSessions',
 						description: 'Get all sessions',
+						action: 'List Sessions'
 					},
 					{
 						name: 'Gel All Annotation',
 						value: 'getAllAnnotation',
 						description: 'Get all notes from a card',
+						action: 'List notes from a card'
+					},
+					{
+						name: 'Create Card',
+						value: 'createCard',
+						description: 'Create card in panel',
+						action: 'Create Card'
+					},
+					{
+						name: 'Create Annotation Text',
+						value: 'createAnnotationText',
+						description: 'Create annotation text',
+						action: 'Create Annotation Text'
+					},
+					{
+						name: 'Create Annotation File',
+						value: 'createAnnotationFile',
+						description: 'Create annotation file',
+						action: 'Create Annotation File'
+					},
+					{
+						name: 'Update Session',
+						value: 'updateSession',
+						description: 'Update Session',
+						action: 'Update Session'
+					},
+					{
+						name: 'Update Status Session',
+						value: 'updateStatusSession',
+						description: 'Update status session',
+						action: 'Update Status Session'
 					}
 				],
 				default: '',
 				description: 'Operation to perform.',
+			},
+			{
+				displayName: 'Panel',
+				name: 'panels',
+				type: 'options',
+				default: '',
+				placeholder: 'Choose Panel',
+				description: '',
+				typeOptions: {
+					loadOptionsMethod: 'getPanels',
+				},
+				displayOptions: {
+					show: {
+						resource: ['panel'],
+						operation: ['createCard'],
+					},
+				},
+			},
+            {
+				displayName: 'Step',
+				name: 'stepPanels',
+				type: 'options',
+				default: '',
+				placeholder: 'Choose Step',
+				description: '',
+				typeOptions: {
+					loadOptionsDependsOn: ['panels'],
+					loadOptionsMethod: 'getStepsPanelId'
+				},
+				displayOptions: {
+					show: {
+						resource: ['panel'],
+						operation: ['createCard'],
+					},
+				},
+			},
+			{
+				displayName: 'Tags',
+				name: 'tagsPanel',
+				type: 'multiOptions',
+				default: '',
+				placeholder: 'Choose Tag',
+				description: '',
+				typeOptions: {
+					loadOptionsDependsOn: ['stepPanels'],
+					loadOptionsMethod: 'getTagsPanel'
+				},
+				displayOptions: {
+					show: {
+						resource: ['panel'],
+						operation: ['createCard'],
+					},
+				},
+			}, 
+			{
+				displayName: 'Title',
+				name: 'title',
+				type: 'string',
+				default: '',
+				description: 'Title',
+				displayOptions: {
+					show: {
+						resource: ['panel'],
+						operation: ['createCard'],
+					},
+				},
+			},
+			{
+				displayName: 'Description',
+				name: 'description',
+				type: 'string',
+				default: '',
+				typeOptions: {
+					rows: 4,
+				},
+				description: 'Make your description',
+				displayOptions: {
+					show: {
+						resource: ['panel'],
+						operation: ['createCard'],
+					},
+				},
 			},
 			{
 				displayName: 'Page Number',
@@ -272,84 +404,6 @@ export class HelenaTest implements INodeType {
 				},
 			},
 			{
-				displayName: 'Custom Fields',
-				name: 'customFields',
-				type: 'fixedCollection',
-				default: '',
-				placeholder: 'Add custom fields',
-				typeOptions: {
-					multipleValues: true,
-				},
-				description: '',
-				options: [
-					{
-						name: 'customFields',
-						displayName: 'Custom Fields',
-						values: [
-							{
-								displayName: 'Key',
-								name: 'key',
-								type: 'options',
-								default: 'Name of the custom field key to add.',
-								typeOptions: {
-									loadOptionsMethod: 'getCustomFields',
-								},
-								description: 'Select the key for the custom field',
-							},
-							{
-								displayName: 'Value',
-								name: 'value',
-								type: 'string',
-								default: '',
-								description: 'Value to set for the metadata key.',
-							},
-						],
-					},
-				],
-				displayOptions: {
-					show: {
-						resource: ['contact'],
-						operation: ['createContact'],
-					},
-				},
-			},
-			{
-				displayName: 'Metada',
-				name: 'metadata',
-				placeholder: 'Add Metada',
-				type: 'fixedCollection',
-				default: '',
-				typeOptions: {
-					multipleValues: true,
-				},
-				options: [
-					{
-						name: 'metadata',
-						displayName: 'Metadata',
-						values: [
-							{
-								displayName: 'Key',
-								name: 'metadataKey',
-								type: 'string',
-								default: '',
-							},
-							{
-								displayName: 'Value',
-								name: 'metadaValue',
-								type: 'string',
-								default: '',
-							},
-						],
-					},
-				],
-				displayOptions: {
-					show: {
-						resource: ['contact'],
-						operation: ['createContact'],
-					},
-				},
-			},
-			{
 				displayName: 'Upsert',
 				name: 'upsert',
 				type: 'boolean',
@@ -399,8 +453,8 @@ export class HelenaTest implements INodeType {
 				description: '',
 				displayOptions: {
 					show: {
-						resource: ['message'],
-						operation: ['getAllMessages', 'sendMessageText'],
+						resource: ['message', 'session'],
+						operation: ['getAllMessages', 'sendMessageText', 'sendMessageFile', 'sendMessageTemplate', 'updateSession', 'updateStatusSession'],
 					},
 				},
 			},
@@ -521,7 +575,7 @@ export class HelenaTest implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['message'],
-						operation: ['sendMessageText'],
+						operation: ['sendMessageText', 'sendMessageFile', 'sendMessageTemplate'],
 					},
 				},
 			},
@@ -535,10 +589,129 @@ export class HelenaTest implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['message'],
-						operation: ['sendMessageText'],
+						operation: ['sendMessageText', 'sendMessageFile', 'sendMessageTemplate'],
 					},
 				},
 			},
+			{
+              displayName: 'Templates',
+			  name: 'templates',
+			  type: 'options',
+			  typeOptions: {
+				loadOptionsDependsOn: ['channelId'],
+				loadOptionsMethod: 'getTemplates'
+			  },
+			  default: '',
+			  placeholder: 'Choose your template',
+			  description: '',
+			  displayOptions: {
+				show: {
+					resource: ['message'],
+					operation: ['sendMessageTemplate'],
+				},
+			  },
+			},
+			{
+              displayName: 'Params',
+			  name: 'paramsTemplates',
+			  type: 'fixedCollection',
+			  default: '',
+			  description: '',
+			  placeholder: 'Add param',
+			  typeOptions: {
+				multipleValues: true
+			},
+			  options: [
+				{
+					name:'paramsTemplatesValues',
+					displayName:'Params',
+					values: [
+						{
+							displayName: 'Name',
+							name: 'name',
+							type: 'options',
+							default: 'Name of the metadata key to add.',
+							typeOptions: {
+								loadOptionsMethod: 'getNameTemplates'
+							}
+						},
+						{
+							displayName: 'Value',
+							name: 'value',
+							type: 'string',
+							default: '',
+							description: 'Value to set for the metadata key.',
+						}
+					]
+				}
+			  ],
+			  displayOptions: {
+				show: {
+					resource: ['message'],
+					operation: ['sendMessageTemplate']
+				}
+			   }
+			},
+			
+			{
+				displayName: 'Url',
+				name: 'urlFile',
+				type: 'string',
+				default: '',
+				placeholder: '',
+				description: 'Url file',
+				displayOptions: {
+					show: {
+						resource: ['message'],
+						operation: ['sendMessageFile', 'createAnnotationFile'],
+					},
+				},
+				modes: [
+					{
+						displayName: 'hdbs',
+						name: 'dshbfus',
+						type: 'string',
+						validation: [
+						{
+							type: 'regex',
+							properties: {
+								regex: /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/,
+								errorMessage: 'Not a valid URL',
+							},
+						}],
+					}
+				]
+				
+					
+			},
+
+			{
+				displayName: 'File Urls',
+				name: 'fileUrls',
+				type: 'collection',
+				default: [],
+				placeholder: 'Add File',
+				options: [
+				  {
+					displayName: 'URL',
+					name: 'fileUrl',
+					type: 'string',
+					default: '',
+					typeOptions: {
+						multipleValues: true
+					},
+					description: '',
+					placeholder: 'Add url file'
+				  },
+				],
+				description: 'Specify a list of items.',
+				displayOptions: {
+					show: {
+						resource: ['panel'],
+						operation: ['createAnnotationFile']
+					}
+				}
+			  },
 			{
 				displayName: 'Text',
 				name: 'textMessage',
@@ -551,8 +724,8 @@ export class HelenaTest implements INodeType {
 				},
 				displayOptions: {
 					show: {
-						resource: ['message'],
-						operation: ['sendMessageText'],
+						resource: ['message', 'panel'],
+						operation: ['sendMessageText', 'createAnnotationText'],
 					},
 				},
 			},
@@ -570,7 +743,7 @@ export class HelenaTest implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['message'],
-						operation: ['sendMessageText'],
+						operation: ['sendMessageText', 'sendMessageFile','sendMessageTemplate'],
 					},
 				},
 			},
@@ -588,7 +761,7 @@ export class HelenaTest implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['message', 'session'],
-						operation: ['sendMessageText', 'getAllSessions'],
+						operation: ['sendMessageText', 'getAllSessions', 'sendMessageFile', 'sendMessageTemplate', 'updateSession'],
 					},
 				},
 			},
@@ -606,12 +779,11 @@ export class HelenaTest implements INodeType {
 				},
 				displayOptions: {
 					show: {
-						resource: ['message'],
-						operation: ['sendMessageText']
+						resource: ['message', 'session'],
+						operation: ['sendMessageText', 'sendMessageFile', 'sendMessageTemplate', 'updateSession']
 					},
 				},
 			},
-
 			{
 				displayName: 'Channels',
 				name: 'channelsIds',
@@ -642,8 +814,8 @@ export class HelenaTest implements INodeType {
 				},
 				displayOptions: {
 					show: {
-						resource: ['session'],
-						operation: ['getAllSessions'],
+						resource: ['session', 'panel'],
+						operation: ['getAllSessions', 'createCard'],
 					},
 				},
 			},
@@ -656,8 +828,8 @@ export class HelenaTest implements INodeType {
 				description: '',
 				displayOptions: {
 					show: {
-						resource: ['message', 'session'],
-						operation: ['sendMessageText', 'getAllSessions'],
+						resource: ['message', 'session', 'panel'],
+						operation: ['sendMessageText', 'getAllSessions', 'createCard'],
 					},
 				},
 			},
@@ -700,6 +872,46 @@ export class HelenaTest implements INodeType {
 					show: {
 						resource: ['session'],
 						operation: ['getAllSessions'],
+					},
+				},
+			},
+			{
+				displayName: 'Status Session',
+				name: 'statusSessionOption',
+				type: 'options',
+				default: [],
+				placeholder: 'Choose status',
+				description: '',
+				options: [
+					{
+						name: 'Undefined',
+						value: 'UNDEFINED',
+					},
+					{
+						name: 'Started',
+						value: 'Started',
+					},
+					{
+						name: 'Pending',
+						value: 'PENDING',
+					},
+					{
+						name: 'In Progress',
+						value: 'IN_PROGRESS',
+					},
+					{
+						name: 'Completed',
+						value: 'COMPLETED',
+					},
+					{
+						name: 'Hidden',
+						value: 'HIDDEN',
+					},
+				],
+				displayOptions: {
+					show: {
+						resource: ['session'],
+						operation: ['updateStatusSession'],
 					},
 				},
 			},
@@ -761,7 +973,7 @@ export class HelenaTest implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['panel'],
-						operation: ['getAllAnnotation'],
+						operation: ['getAllAnnotation', 'createAnnotationText', 'createAnnotationFile'],
 					},
 				},
 			},
@@ -777,7 +989,7 @@ export class HelenaTest implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['message'],
-						operation: ['sendMessageText'],
+						operation: ['sendMessageText','sendMessageFile', 'sendMessageTemplate'],
 					},
 				},
 			},
@@ -789,7 +1001,7 @@ export class HelenaTest implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['message'],
-						operation: ['sendMessageText'],
+						operation: ['sendMessageText', 'sendMessageFile', 'sendMessageTemplate'],
 					},
 				},
 			},
@@ -801,10 +1013,162 @@ export class HelenaTest implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['message'],
-						operation: ['sendMessageText'],
+						operation: ['sendMessageText', 'sendMessageFile', 'sendMessageTemplate'],
 					},
 				},
-			}
+			},
+			{
+				displayName: 'Monetary Amount',
+				name: 'monetaryAmount',
+				type: 'number',
+				default: '',
+				placeholder: 'Enter amount',
+				description: '',
+				displayOptions: {
+					show: {
+						resource: ['panel'],
+						operation: ['createCard'],
+					},
+				},
+			},
+			{
+				displayName: 'Position',
+				name: 'position',
+				type: 'number',
+				default: '',
+				placeholder: 'Enter position',
+				description: '',
+				displayOptions: {
+					show: {
+						resource: ['panel'],
+						operation: ['createCard'],
+					},
+				},
+			},
+
+			{
+				displayName: 'Custom Fields',
+				name: 'customFields',
+				type: 'fixedCollection',
+				default: '',
+				placeholder: 'Add custom fields',
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: '',
+				options: [
+					{
+						name: 'customFields',
+						displayName: 'Custom Fields',
+						values: [
+							{
+								displayName: 'Key',
+								name: 'key',
+								type: 'options',
+								default: 'Name of the custom field key to add.',
+								typeOptions: {
+									loadOptionsMethod: 'getCustomFields',
+								},
+								description: 'Select the key for the custom field',
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								default: '',
+								description: 'Value to set for the metadata key.',
+							},
+						],
+					},
+				],
+				displayOptions: {
+					show: {
+						resource: ['contact'],
+						operation: ['createContact'],
+					},
+				},
+			},
+			{
+				displayName: 'Custom Fields',
+				name: 'customFieldsPanel',
+				type: 'fixedCollection',
+				default: '',
+				placeholder: 'Add custom fields',
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: '',
+				options: [
+					{
+						name: 'customFields',
+						displayName: 'Custom Fields',
+						values: [
+							{
+								displayName: 'Key',
+								name: 'key',
+								type: 'options',
+								default: 'Name of the custom field key to add.',
+								typeOptions: {
+									loadOptionsMethod: 'getCustomFieldsPanel',
+									loadOptionsDependsOn: ['panels']
+								},
+								description: 'Select the key for the custom field',
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								default: '',
+								description: 'Value to set for the metadata key.',
+							},
+						],
+					},
+				],
+				displayOptions: {
+					show: {
+						resource: ['panel'],
+						operation: ['createCard'],
+					},
+				},
+			},
+			{
+				displayName: 'Metada',
+				name: 'metadata',
+				placeholder: 'Add Metada',
+				type: 'fixedCollection',
+				default: '',
+				typeOptions: {
+					multipleValues: true,
+				},
+				options: [
+					{
+						name: 'metadata',
+						displayName: 'Metadata',
+						values: [
+							{
+								displayName: 'Key',
+								name: 'metadataKey',
+								type: 'string',
+								default: '',
+							},
+							{
+								displayName: 'Value',
+								name: 'metadaValue',
+								type: 'string',
+								default: '',
+							},
+						],
+					},
+				],
+				displayOptions: {
+					show: {
+						resource: ['contact', 'panel'],
+						operation: ['createContact', 'createCard'],
+					},
+				},
+			},
+
+
 
 		],
 	};
@@ -817,7 +1181,101 @@ export class HelenaTest implements INodeType {
             async getUsersIds(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> { return await HelenCoreService.getUsersIds(this); },	
             async getChannelsIds(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> { return await HelenChatService.getChannelsIds(this); },
 			async getBots(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> { return await HelenChatService.getBots(this); },
-	
+		
+			/*----CRM----*/
+			async getPanels(this: ILoadOptionsFunctions) :  Promise<Array<{ name: string; value: any }>> { return await HelenCrmService.getPanels(this); },
+			//async getCustomFieldsPanel(this: ILoadOptionsFunctions):  Promise<Array<{ name: string; value: any }>> { return await HelenCrmService.getCustomFieldsPanel(this); },
+	        //async getStepsPanelId(this: ILoadOptionsFunctions, panelId: string, ): Promise<Array<{ name: string; value: any }>> { return await HelenCrmService.getStepsPanelId(panelId, this); },
+			//async getTagsPanel(){},
+
+			async getCustomFieldsPanel(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string }>> {
+				const panel = this.getNodeParameter('panels', 0) as any;
+				const credentials = await this.getCredentials('HelenaTestApi');
+				const token = credentials?.apiKey as string;
+
+				const url = `https://api-test.helena.run/crm/v1/panel/${panel}/custom-fields`;
+					try {
+						const response = await axios.get(url, {
+						  headers: {
+							  Accept: 'application/json',
+							  'Content-Type': 'application/json',
+							  Authorization: `Bearer ${token}`,
+						  }
+						});
+				  
+						const data = response.data;
+						const result = data.filter((field: any) => field.type != 'GROUP');
+						
+						return result.map((customFieldPanel: any) => ({
+							name: customFieldPanel.name,
+							value: customFieldPanel.key
+							})); 
+					  }
+					  catch(error) {
+						  throw new Error(`Failed to load panels: ${error.message}`);
+					  }
+			 },
+
+			async getStepsPanelId(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: any }>>{
+				const credentials = await this.getCredentials('HelenaTestApi');
+				const token = credentials?.apiKey as string;
+
+				const panel = this.getNodeParameter('panels', 0) as any;
+		     //   const panelId = panel.id;
+
+				const url = `https://api-test.helena.run/crm/v1/panel/${panel}?IncludeDetails=Steps`;
+
+				let steps: {name: string, value: string}[] = [];
+				try {
+					const response = await axios.get(url, {
+						headers: {
+							Accept: 'application/json',
+							'Content-Type': 'application/json',
+							Authorization: `Bearer ${token}`,
+						}
+					});
+			
+					const data = response.data;
+					steps = data.steps;
+				} catch(error){
+					throw new ErrorEvent(`Failed to load steps: ${error.message}`);
+				}
+				return steps.map((step: any) => ({
+					name: step.title,
+					value: step.id
+					}));
+				},
+				async getTagsPanel(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: any }>>{
+					const credentials = await this.getCredentials('HelenaTestApi');
+					const token = credentials?.apiKey as string;
+
+					const panel = this.getNodeParameter('panels', 0) as any;
+		          //  const panelId = panel.id;
+                   // console.log(panelId)
+					const url = `https://api-test.helena.run/crm/v1/panel/${panel}?IncludeDetails=Tags`;
+			
+					let tags: {name: string, value: string}[] = [];
+					try {
+						const response = await axios.get(url, {
+							headers: {
+								Accept: 'application/json',
+								'Content-Type': 'application/json',
+								Authorization: `Bearer ${token}`,
+							}
+						});
+				
+						const data = response.data;
+						tags = data.tags;
+						console.log("Tgas do panel")
+						console.log(tags)
+					} catch(error){
+						throw new ErrorEvent(`Failed to load tags: ${error.message}`);
+					}
+					return tags.map((tag: any) => ({
+						name: tag.name,
+						value: tag.id
+						}));
+					},
 
 			async getDepartmentsIds(
 				this: ILoadOptionsFunctions,
@@ -855,7 +1313,6 @@ export class HelenaTest implements INodeType {
 				console.log(departmentId)
 				if (!departmentId) {
 					throw new Error(`Choose department`);
-					return [];
 				}
      
 				const credentials = await this.getCredentials('HelenaTestApi');
@@ -890,6 +1347,95 @@ export class HelenaTest implements INodeType {
 					throw new Error(`Failed to load users: ${error.message}`);
 				}
 			},
+
+			 async getTemplates(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string}>> {
+			const channelId = this.getCurrentNodeParameter('channelId') as string;
+			const url = `https://api-test.helena.run/chat/v1/template?ChannelId=${channelId}`;
+		
+			const credentials = await this.getCredentials('HelenaTestApi');
+			const token = credentials?.apiKey as string;
+
+			const result: any = [];
+			let hasMore = true;
+			let pageNumber = 0;
+		
+			while(hasMore){
+				pageNumber+=1;
+				try {
+					const response = await axios.get(url, {
+					  headers: {
+						  Accept: 'application/json',
+						  'Content-Type': 'application/json',
+						  Authorization: `Bearer ${token}`,
+					  },
+					  params: {
+						pageNumber: pageNumber
+					  }
+					});
+			  
+					console.log("pAGE number:"+pageNumber)
+					console.log("Carregando templates");
+					const data = response.data;
+					result.push(...data.items);
+					console.log(data)
+					if(!data.hasMorePages){
+						console.log("Break");
+						hasMore = false;
+					}
+					
+				  }
+				  catch(error) {
+					  throw new Error(`Failed to load tags: ${error.message}`);
+				  }
+			}
+			console.log("Reuslt")
+			console.log(result)
+			return result.map((template: any) => ({
+				name: template.name,
+				value: template
+				}));
+			
+		},
+		 async getNameTemplates(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string }>> {
+			const template = this.getCurrentNodeParameter('templates') as {name: string};
+			const templateName = template.name;
+			const channelId = this.getCurrentNodeParameter('channelId') as string;
+			const url = `https://api-test.helena.run/chat/v1/template?ChannelId=${channelId}&IncludeDetails=Params&PageSize=100`;
+		  
+			const credentials = await this.getCredentials('HelenaTestApi');
+			const token = credentials?.apiKey as string;
+		    console.log("Nome do Templaete: " + templateName)
+			console.log("ChannelId: " + channelId)
+			console.log("url: " + url)
+
+			try {
+
+			  const response = await axios.get(url, {
+				headers: {
+				  Accept: 'application/json',
+				  'Content-Type': 'application/json',
+				  Authorization: `Bearer ${token}`,
+				},
+				params : {
+					name: templateName 
+				}
+			  });
+		  
+			  const data = response.data;
+		  
+			  const result = data.items.flatMap((x: any) => x.params?.map((p: any) => ({
+				name: p.name,
+				value: p.name
+			  })));
+			  console.log("Result do name")
+			  console.log(result);
+			  return result
+			} catch (error) {
+			  throw new Error(`Failed to load template parameters: ${error.message}`);
+			}
+		}
+
+
 			
 		},
 	};
@@ -1439,9 +1985,439 @@ export class HelenaTest implements INodeType {
 			throw new Error(`API request failed: ${error.message}`);
 		  }
 
-		} 
+		} else if(resource === 'message' && operation === 'sendMessageFile'){
+			const from = this.getNodeParameter('channelId', 0) as string;
+			const to = this.getNodeParameter('numberToSend', 0) as string;
+			const fileUrl = this.getNodeParameter('urlFile', 0) as string;
+			const botId = this.getNodeParameter('botId', 0) as string;
 
-		console.log(results);
+			const departmentId = this.getNodeParameter('departmentId', 0) as string;
+			const sessionId = this.getNodeParameter('sessionId', 0) as string;
+			const userId = this.getNodeParameter('userIdByDepartment', 0) as string;
+
+			const enableBot = this.getNodeParameter('enableBot', 0) as boolean;
+			const hiddenSession = this.getNodeParameter('hiddenSession', 0) as boolean;
+			const forceStartSession = this.getNodeParameter('forceStartSession', 0) as boolean;
+             
+			const url = 'https://api-test.helena.run/chat/v1/message/send'
+			const body = {
+                from: from,
+                to: to,
+				
+                body: {
+                    fileUrl: fileUrl,
+                },
+				options: {
+					enableBot: enableBot,
+					hiddenSession: hiddenSession,
+					forceStartSession: forceStartSession
+				},
+				...(departmentId && { department: { id: departmentId } }),
+				...(sessionId && { sessionId: sessionId }),
+				...(botId && { botId: botId }),
+				...(userId && { user: { id: userId } }),
+				
+		}
+
+		try {
+          const response = await axios.post(url, body, {
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`,
+			},
+		  });
+
+		  const data = response.data;
+		  console.log('Resposta do envio de arquivo:');
+		  console.log(data);
+		  const items: INodeExecutionData[] = [];
+          items.push({ json: data });
+
+		   results[0] = items;
+	       return results;
+		}
+		catch(error){
+			console.log('Error');
+			console.log(error);
+			throw new Error(`API request failed: ${error.message}`);
+		}
+	}
+	else if(resource === 'message' && operation === 'sendMessageTemplate'){
+	   const from = this.getNodeParameter('channelId', 0) as string;
+	   const template = this.getNodeParameter('templates', 0) as {id: string};
+	   const templateId = template.id;
+	   console.log(templateId)
+	   const paramsTemplates = this.getNodeParameter('paramsTemplates', 0) as { paramsTemplatesValues: { name: string, value: string }[] };
+	   const paramsArray = paramsTemplates.paramsTemplatesValues;
+	   const to = this.getNodeParameter('numberToSend', 0) as string;
+
+			const departmentId = this.getNodeParameter('departmentId', 0) as string;
+			const sessionId = this.getNodeParameter('sessionId', 0) as string;
+			const userId = this.getNodeParameter('userIdByDepartment', 0) as string;
+			const botId = this.getNodeParameter('botId', 0) as string;
+
+			const enableBot = this.getNodeParameter('enableBot', 0) as boolean;
+			const hiddenSession = this.getNodeParameter('hiddenSession', 0) as boolean;
+			const forceStartSession = this.getNodeParameter('forceStartSession', 0) as boolean;
+	     
+
+	   const nameSet = new Set<string>(); 
+       const uniqueParams: { name: string, value: string }[] = [];
+    if (Array.isArray(paramsArray)) {
+        paramsArray.forEach(param => {
+            const { name, value } = param;
+
+            if (!nameSet.has(name)) {
+                nameSet.add(name);
+                uniqueParams.push({ name, value });
+            }
+        });
+		//results[0] = [{ json: { uniqueParams } }];
+	}
+
+    else {
+		   results[0] = [{ json: { error: 'No paramsTemplates found' } }];
+	    }
+
+		const transformToObject = (params: { name: string, value: string }[]) => {
+			const result: any = {};
+			params.forEach(param => {
+			  result[param.name] = param.value;
+			});
+			return { parameters: result };
+		  };
+		  
+		const body = {
+			from: from,
+			to: to,
+			
+			body: {
+				templateId: templateId,
+				...(uniqueParams && transformToObject(uniqueParams))
+			},
+			options: {
+				enableBot: enableBot,
+				hiddenSession: hiddenSession,
+				forceStartSession: forceStartSession
+			},
+
+			...(sessionId && { sessionId: sessionId }),
+			...(botId && { botId: botId }),
+			...(userId && { user: { id: userId } }),
+			...(departmentId && { department: { id: departmentId } })	
+		
+	}
+	const url = 'https://api-test.helena.run/chat/v1/message/send'
+		try {
+			const response = await axios.post(url, body, {
+				headers: {
+					Accept: 'application/json',
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+			  });
+              console.log(body)
+			  const data = response.data;
+			  console.log('Resposta do envio de template:');
+			  console.log(data);
+			  const items: INodeExecutionData[] = [];
+			  items.push({ json: data });
+	
+			   results[0] = items;
+			   return results;
+		}catch(error){
+			console.log('Error');
+			console.log(error);
+			throw new Error(`API request failed: ${error.message}`);
+		}
+	   
+   
+	   // Verificar se o número de parâmetros fornecidos excede o máximo permitido
+	  // if (paramsTemplates.paramsTemplatesValues.length > maxParams) {
+	//	   throw new Error(`Cannot add more than ${maxParams} parameters. You have exceeded the allowed limit.`);
+	  // }
+   
+		
+	} else if(resource === 'panel' && operation === 'createCard'){
+
+		const stepId = this.getNodeParameter('stepPanels', 0) as string;
+		const title = this.getNodeParameter('title', 0) as string;
+		const description = this.getNodeParameter('description', 0) as string;
+		const position = this.getNodeParameter('position', 0) as number;
+		const userId = this.getNodeParameter('userId', 0) as string;
+		const tagsPanelIds = this.getNodeParameter('tagsPanel', 0) as Array<string>;
+        const contactId = this.getNodeParameter('contactId', 0) as Array<string>;
+		const monetaryAmount = this.getNodeParameter('monetaryAmount', 0) as string;
+
+		const customFields = this.getNodeParameter('customFieldsPanel', 0) as {
+			customFields: { key: string; value: string }[];
+		};
+		const metadata = this.getNodeParameter('metadata', 0) as {
+			metadata: { key: string; value: string }[];
+		};
+  
+		console.log("CustomFields")
+		console.log(customFields)
+		 const customFieldsObject = customFields?.customFields?.reduce(
+		 	(acc: { [key: string]: string }, field) => {
+		 		acc[field.key] = field.value;
+		 		console.log("No reduce")
+		 		console.log(acc)
+		 		return acc;
+		 	},
+		 	{},
+		);
+
+		//const customFieldsObject: Map<string, string> = new Map<string, string>();
+	//	customFields?.customFields?.forEach(field => {
+	//		customFieldsObject.set(field.key, field.value)
+	//	});
+
+		console.log("Metadata")
+		console.log(metadata)
+		const metadataObject = metadata?.metadata?.reduce(
+			(acc: { [key: string]: string }, metadata) => {
+				acc[metadata.key] = metadata.value;
+				return acc;
+			},
+			{},
+		);
+
+		if(!title || title.trim() == ''){
+			throw new Error('Title is empty, please fill it in');
+		}
+
+		if(!stepId) {
+			throw new Error('Choose a panel and its step');
+		}
+
+		const body = {
+			stepId: stepId,
+			title: title,
+			tagIds: tagsPanelIds,
+
+			...(monetaryAmount && { monetaryAmount: monetaryAmount }),
+			...(userId && { responsibleUserId: userId }),
+			...(contactId && { contactIds: [ contactId ]}),
+			...(position && { position: position }),
+			...(description && { description: description }),
+			...(metadataObject && { metadata: metadataObject}),
+			...(customFieldsObject && { customFields: customFieldsObject}),
+	    }
+
+	const url = 'https://api-test.helena.run/crm/v1/panel/card';
+
+	console.log("Body")
+	console.log(body);
+
+		try {
+			const response = await axios.post(url, body, {
+				headers: {
+					Accept: 'application/json',
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+			  });
+
+              console.log(body)
+			  const data = response.data;
+			  console.log('Resposta do envio de card:');
+			  console.log(data);
+			  const items: INodeExecutionData[] = [];
+			  items.push({ json: data });
+	
+			   results[0] = items;
+			   return results;
+		}
+		catch(error) {
+			console.log("Error")
+			console.log(error);
+			throw new Error(`API request failed: ${error.message}`);
+		}
+		
+	} else if(resource === 'panel' && operation === 'createAnnotationText'){
+		const cardId = this.getNodeParameter('cardId', 0) as string;
+		const annotation = this.getNodeParameter('textMessage', 0) as string;
+
+		if(!cardId){
+			throw new Error('CardId cannot be empty');
+		}
+		if(!annotation){
+			throw new Error('Annotation is empty, please fill it in');
+		}
+
+		const url = `https://api-test.helena.run/crm/v1/panel/card/${cardId}/note`;
+		const body = {
+          text: annotation
+		}
+		try {
+			const response = await axios.post(url, body, {
+				headers: {
+					Accept: 'application/json',
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+			  });
+
+			  const data = response.data;
+			  console.log('Resposta do envio de anotação do card: ');
+			  console.log(data);
+			  const items: INodeExecutionData[] = [];
+			  items.push({ json: data });
+	
+			   results[0] = items;
+			   return results;
+		}
+		catch(error) {
+			console.log("Error")
+			console.log(error);
+			throw new Error(`API request failed: ${error.message}`);
+		}
+
+	}
+	else if(resource === 'panel' && operation === 'createAnnotationFile'){
+		const cardId = this.getNodeParameter('cardId', 0) as string;
+		const fileUrls = this.getNodeParameter('fileUrls', 0) as any;
+		const arrayUrls = fileUrls.fileUrl;
+
+		console.log("Array Urls")
+		console.log(arrayUrls)
+
+		if(!cardId){
+			throw new Error('CardId cannot be empty');
+		}
+		if(!arrayUrls){
+			throw new Error('URL File is empty, please fill it in');
+		}
+
+		const url = `https://api-test.helena.run/crm/v1/panel/card/${cardId}/note`;
+
+		const body = {
+          fileUrls: arrayUrls
+		}
+
+		try {
+			const response = await axios.post(url, body, {
+				headers: {
+					Accept: 'application/json',
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+			  });
+
+			  const data = response.data;
+			  console.log('Resposta do envio de anotação do card: ');
+			  console.log(data);
+
+			  const items: INodeExecutionData[] = [];
+			  items.push({ json: data });
+	
+			   results[0] = items;
+			   return results;
+		}
+		catch(error) {
+			console.log("Error")
+			console.log(error);
+			throw new Error(`API request failed: ${error.message}`);
+		}
+	} else if(resource === 'session' && operation === 'updateSession'){
+		const sessionId = this.getNodeParameter('sessionId', 0) as string;
+		const departmentId = this.getNodeParameter('departmentId', 0) as string;
+		const userId = this.getNodeParameter('userIdByDepartment', 0) as string;
+
+		if(!sessionId){
+			throw new Error('CardId cannot be empty');
+		}
+/*
+		if(!departmentId || !userId){
+			throw new Error('Choose one department or user to transfer the conversation');
+		}
+*/
+		const url = `https://api-test.helena.run/chat/v1/session/${sessionId}/transfer`;
+		let type = departmentId && userId ? 'USER' : 'DEPARTMENT';
+
+		const body = {
+			type: type,
+          ...(departmentId && {newDepartmentId: departmentId }),
+		  ...(userId && {newUserId: userId})
+		}
+
+		console.log("Body")
+		console.log(body);
+
+		try {
+			const response = await axios.put(url, body, {
+				headers: {
+					Accept: 'application/json',
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+			  });
+
+			  const data = response.data;
+			  console.log('Resposta da atualização da conversa: ');
+			  console.log(data);
+
+			  const items: INodeExecutionData[] = [];
+			  items.push({ json: data });
+	
+			   results[0] = items;
+			   return results;
+	}
+	catch(error){
+		console.log("Error")
+		console.log(error);
+		throw new Error(`API request failed: ${error.message}`);
+	}
+}
+
+else if(resource === 'session' && operation === 'updateStatusSession') {
+ const sessionId = this.getNodeParameter('sessionId', 0) as string;
+ const status = this.getNodeParameter('statusSessionOption', 0) as string;
+
+ if(!sessionId && !status){
+	throw new Error(`API request failed: Fill in all fields`);
+ }
+
+ const url = `https://api-test.helena.run/chat/v1/session/${sessionId}/status`;
+ const body = {
+	newStatus: status
+}
+
+console.log(url)
+console.log(body)
+
+ try {
+	const response = await axios.put(url, body, {
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`,
+		},
+	  });
+
+	  const data = response.data;
+	  console.log('Resposta da atualização da conversa: ');
+	  console.log(data);
+
+	  const items: INodeExecutionData[] = [];
+	  items.push({ json: data });
+
+	   results[0] = items;
+	   return results;
+}
+catch(error){
+console.log("Error")
+console.log(error);
+throw new Error(`API request failed: ${error.message}`);
+}
+
+
+}
+
+		//console.log(results);
 		return results;
 	}
 }
+
