@@ -1347,7 +1347,6 @@ export class HelenaTest implements INodeType {
 				results[0] = items;
 			 }
 			 catch(error) {
-				console.log("Error");
 				throw new Error(`API request failed: ${error.message}`);
 			 } 
 
@@ -1362,11 +1361,6 @@ export class HelenaTest implements INodeType {
 
 			const credentials = await this.getCredentials('HelenaTestApi');
 			const token = credentials?.apiKey as string;
-
-			console.log('Page size' + pageSize);
-			console.log('Page Number ' + pageNumber);
-			console.log('Order by' + orderBy);
-			console.log('Order direction ' + orderDirection);
 
 			try {
 				const response = await axios.get(url, {
@@ -1383,19 +1377,14 @@ export class HelenaTest implements INodeType {
 					},
 				});
 
-				console.log('Response: ');
-				console.log(response);
 				const data = response.data;
-				console.log('Response: ' + data);
-
+		
 				const items: INodeExecutionData[] = data.items.map((contact: any) => ({
 					json: contact,
 				}));
 
 				results[0] = items;
 			} catch (error) {
-				console.log('Error ');
-				console.log(error);
 				throw new Error(`API request failed: ${error.message}`);
 			}
 
@@ -1417,11 +1406,6 @@ export class HelenaTest implements INodeType {
 
 			 const upsert = this.getNodeParameter('upsert', 0) as boolean;
 			 const getIfExists = this.getNodeParameter('getIfExists', 0) as boolean;
-
-			 console.log("Updsert: ")
-			 console.log(upsert);
-			 console.log("Get If Exists");
-			 console.log(getIfExists);
 
 			const regexEmail = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
 			const matchEmail = email.match(regexEmail);
@@ -1472,11 +1456,7 @@ export class HelenaTest implements INodeType {
 					},
 				});
 
-				console.log(tagIds);
-				console.log(customFields);
 				const data = response.data;
-				console.log("Resposta da requisição: ")
-				console.log(data);
 
 				const items: INodeExecutionData[] = [
 					{
@@ -1485,8 +1465,6 @@ export class HelenaTest implements INodeType {
 				];
 				results[0] = items;
 			} catch (error) {
-				console.log('Error ');
-				console.log(error);
 				throw new Error(`API request failed: ${error.message}`);
 			}
 		} else if (resource === 'message' && operation === 'getMessageById') {
@@ -1504,13 +1482,10 @@ export class HelenaTest implements INodeType {
 				});
 
 				const data = response.data;
-				console.log('Data');
-				console.log(data);
+			
 				const items: INodeExecutionData[] = [{json: data,},];
 				results[0] = items;
 			} catch (error) {
-				console.log('Error ');
-				console.log(error);
 				throw new Error(`API request failed: ${error.message}`);
 			}
 		} else if (resource === 'message' && operation === 'getMessageStatus') {
@@ -1528,8 +1503,7 @@ export class HelenaTest implements INodeType {
 				});
 
 				const data = response.data;
-				console.log('Data');
-				console.log(data);
+				
 				const items: INodeExecutionData[] = [
 					{
 						json: data,
@@ -1537,8 +1511,6 @@ export class HelenaTest implements INodeType {
 				];
 				results[0] = items;
 			} catch (error) {
-				console.log('Error ');
-				console.log(error);
 				throw new Error(`API request failed: ${error.message}`);
 			}
 		} else if (resource === 'message' && operation === 'getAllMessages') {
@@ -1554,12 +1526,6 @@ export class HelenaTest implements INodeType {
 			const updatedAtBefore = this.getNodeParameter('updatedAtBefore', 0) as string;
 
 			const urlMessage = `${baseURL}/chat/v1/message`;
-
-			console.log('Created At After:');
-			console.log(createdAtAfter);
-
-			console.log('Created At Before');
-			console.log(createdAtBefore);
 
 			try {
 				const response = await axios.get(urlMessage, {
@@ -1589,11 +1555,7 @@ export class HelenaTest implements INodeType {
 
 				results[0] = items;
 
-				console.log('Response: ');
-				console.log(data);
 			} catch (error) {
-				console.log('Error');
-				console.log(error);
 				throw new Error(`API request failed: ${error.message}`);
 			}
 		} else if (resource === 'message' && operation === 'sendMessageText') {
@@ -1632,9 +1594,6 @@ export class HelenaTest implements INodeType {
 				 ...(userId && { user: { id: userId } }),
 			 }
 
-			 console.log("Body")
-			 console.log(body);
-
 			try {
 
 				const response = await axios.post(urlSendMessage, body, {
@@ -1645,19 +1604,14 @@ export class HelenaTest implements INodeType {
                     },
                 });
 
-                console.log("Response")
-				console.log(response)
 				const data = response.data;
-				console.log('data');
-				console.log(data);
+	
 				const items: INodeExecutionData[] = [];
                 items.push({ json: data });
 
 				results[0] = items;
 				return results;
 			} catch (error) {
-				console.log('Error');
-				console.log(error);
 				throw new Error(`API request failed: ${error.message}`);
 			}
 
@@ -1695,7 +1649,6 @@ export class HelenaTest implements INodeType {
 			urlSession += `?${params.toString()}`;
 			
 			try {
-				console.log('Entrando no try')
 				const response = await axios.get(urlSession, {
 					headers: {
 						Accept: 'application/json',
@@ -1727,8 +1680,8 @@ export class HelenaTest implements INodeType {
 				});
 
 				const data = response.data;
-				console.log("Data");
-				console.log(data);
+				("Data");
+				(data);
 				const items: INodeExecutionData[] = data.items.map((session: any) => ({
 					json: session,
 				}));
@@ -1736,8 +1689,6 @@ export class HelenaTest implements INodeType {
 				results[0] = items;
 
 		   }catch (error) {
-			console.log('Error');
-			console.log(error);
 			throw new Error(`API request failed: ${error.message}`);
 		  }
 		} else if(resource === 'panel' && operation === 'getAllAnnotation') {
@@ -1768,8 +1719,6 @@ export class HelenaTest implements INodeType {
 
 			const data = response.data;
 
-			console.log("Data");
-			console.log(data);
 			const items: INodeExecutionData[] = data.items.map((session: any) => ({
 				json: session,
 			}));
@@ -1777,8 +1726,6 @@ export class HelenaTest implements INodeType {
 			results[0] = items;
 
 		   }catch(error) {
-			console.log('Error');
-			console.log(error);
 			throw new Error(`API request failed: ${error.message}`);
 		  }
 
@@ -1825,8 +1772,6 @@ export class HelenaTest implements INodeType {
 		  });
 
 		  const data = response.data;
-		  console.log('Resposta do envio de arquivo:');
-		  console.log(data);
 		  const items: INodeExecutionData[] = [];
           items.push({ json: data });
 
@@ -1834,8 +1779,6 @@ export class HelenaTest implements INodeType {
 	       return results;
 		}
 		catch(error){
-			console.log('Error');
-			console.log(error);
 			throw new Error(`API request failed: ${error.message}`);
 		}
 	} else if(resource === 'message' && operation === 'sendMessageTemplate'){
@@ -1889,9 +1832,6 @@ export class HelenaTest implements INodeType {
 			});
 			return { parameters: result };
 		  };
-
-		  console.log("Unique Params");
-		  console.log(uniqueParams)
 		  
 		const body = {
 			from: from,
@@ -1926,18 +1866,14 @@ export class HelenaTest implements INodeType {
 				},
 			  });
 
-              console.log(body)
 			  const data = response.data;
-			  console.log('Resposta do envio de template:');
-			  console.log(data);
+	
 			  const items: INodeExecutionData[] = [];
 			  items.push({ json: data });
 	
 			   results[0] = items;
 			   return results;
 		}catch(error){
-			console.log('Error');
-			console.log(error);
 			throw new Error(`API request failed: ${error.message}`);
 		}
 	   
@@ -1969,8 +1905,6 @@ export class HelenaTest implements INodeType {
 		 const customFieldsObject = customFields?.customFields?.reduce(
 		 	(acc: { [key: string]: string }, field) => {
 		 		acc[field.key] = field.value;
-		 		console.log("No reduce")
-		 		console.log(acc)
 		 		return acc;
 		 	},
 		 	{},
@@ -2013,9 +1947,6 @@ export class HelenaTest implements INodeType {
 
 	const url = `${baseURL}/crm/v1/panel/card`;
 
-	console.log("Body")
-	console.log(body);
-
 		try {
 			const response = await axios.post(url, body, {
 				headers: {
@@ -2026,8 +1957,7 @@ export class HelenaTest implements INodeType {
 			  });
 
 			  const data = response.data;
-			  console.log('Resposta do envio de card:');
-			  console.log(data);
+		
 			  const items: INodeExecutionData[] = [];
 			  items.push({ json: data });
 	
@@ -2035,8 +1965,6 @@ export class HelenaTest implements INodeType {
 			   return results;
 		}
 		catch(error) {
-			console.log("Error")
-			console.log(error);
 			throw new Error(`API request failed: ${error.message}`);
 		}
 		
@@ -2065,8 +1993,7 @@ export class HelenaTest implements INodeType {
 			  });
 
 			  const data = response.data;
-			  console.log('Resposta do envio de anotação do card: ');
-			  console.log(data);
+			
 			  const items: INodeExecutionData[] = [];
 			  items.push({ json: data });
 	
@@ -2074,8 +2001,6 @@ export class HelenaTest implements INodeType {
 			   return results;
 		}
 		catch(error) {
-			console.log("Error")
-			console.log(error);
 			throw new Error(`API request failed: ${error.message}`);
 		}
 
@@ -2084,9 +2009,6 @@ export class HelenaTest implements INodeType {
 		const cardId = this.getNodeParameter('cardId', 0) as string;
 		const fileUrls = this.getNodeParameter('fileUrls', 0) as any;
 		const arrayUrls = fileUrls.fileUrl;
-
-		console.log("Array Urls")
-		console.log(arrayUrls)
 
 		if(!cardId){
 			throw new Error('CardId cannot be empty');
@@ -2111,8 +2033,6 @@ export class HelenaTest implements INodeType {
 			  });
 
 			  const data = response.data;
-			  console.log('Resposta do envio de anotação do card: ');
-			  console.log(data);
 
 			  const items: INodeExecutionData[] = [];
 			  items.push({ json: data });
@@ -2121,8 +2041,6 @@ export class HelenaTest implements INodeType {
 			   return results;
 		}
 		catch(error) {
-			console.log("Error")
-			console.log(error);
 			throw new Error(`API request failed: ${error.message}`);
 		}
 	} else if(resource === 'session' && operation === 'updateSession'){
@@ -2147,9 +2065,6 @@ export class HelenaTest implements INodeType {
 		  ...(userId && {newUserId: userId})
 		}
 
-		console.log("Body")
-		console.log(body);
-
 		try {
 			const response = await axios.put(url, body, {
 				headers: {
@@ -2160,8 +2075,6 @@ export class HelenaTest implements INodeType {
 			  });
 
 			  const data = response.data;
-			  console.log('Resposta da atualização da conversa: ');
-			  console.log(data);
 
 			  const items: INodeExecutionData[] = [];
 			  items.push({ json: data });
@@ -2170,8 +2083,6 @@ export class HelenaTest implements INodeType {
 			   return results;
 		}
 		catch(error){
-			console.log("Error")
-			console.log(error);
 			throw new Error(`API request failed: ${error.message}`);
 		}
     }
@@ -2198,8 +2109,6 @@ export class HelenaTest implements INodeType {
 	  });
 
 	  const data = response.data;
-	  console.log('Resposta da atualização da conversa: ');
-	  console.log(data);
 
 	  const items: INodeExecutionData[] = [];
 	  items.push({ json: data });
@@ -2208,8 +2117,6 @@ export class HelenaTest implements INodeType {
 	   return results;
 	}
 	catch(error){
-		console.log("Error")
-		console.log(error);
 		throw new Error(`API request failed: ${error.message}`);
 	}
 }
