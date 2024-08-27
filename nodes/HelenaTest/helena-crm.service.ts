@@ -60,10 +60,11 @@ static async getPanels(
             });
       
             const data = response.data;
-            data.filter((field: any) => field.type != 'GROUP');
-            console.log("GetCustomFieldsPanel")
-            console.log(data);
-            return data.map((customFieldPanel: any) => ({
+            const result = data.filter((field: any) => field.type != 'GROUP');
+            console.log("Custom Fields do Painel que são diferentes do grupo");
+            console.log(result);
+            //data.filter((field: any) => field.type != 'GROUP');
+            return result.map((customFieldPanel: any) => ({
                 name: customFieldPanel.name,
                 value: customFieldPanel.id
                 })); 

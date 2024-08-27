@@ -1225,267 +1225,83 @@ export class HelenaTest implements INodeType {
 	methods = {
 		loadOptions: {
 
-			async getCustomFields(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> { return await HelenCoreService.getCustomFields(this); },	
-			async getTagsIds(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> { return await HelenCoreService.getTagsIds(this); },	
-            async getUsersIds(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> { return await HelenCoreService.getUsersIds(this); },	
-            async getChannelsIds(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> { return await HelenChatService.getChannelsIds(this); },
-			async getBots(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> { return await HelenChatService.getBots(this); },
-		
-			/*----CRM----*/
-			async getPanels(this: ILoadOptionsFunctions) :  Promise<Array<{ name: string; value: any }>> { return await HelenCrmService.getPanels(this); },
-			//async getCustomFieldsPanel(this: ILoadOptionsFunctions):  Promise<Array<{ name: string; value: any }>> { return await HelenCrmService.getCustomFieldsPanel(this); },
-	        //async getStepsPanelId(this: ILoadOptionsFunctions, panelId: string, ): Promise<Array<{ name: string; value: any }>> { return await HelenCrmService.getStepsPanelId(panelId, this); },
-			//async getTagsPanel(){},
+			/*----CORE----*/
+			async getCustomFields(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> {
+				 return await HelenCoreService.getCustomFields(this); 
+			},	
 
-			async getCustomFieldsPanel(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string }>> {
-				const panel = this.getNodeParameter('panels', 0) as any;
-				const credentials = await this.getCredentials('HelenaTestApi');
-				const token = credentials?.apiKey as string;
+			async getTagsIds(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> {
+				 return await HelenCoreService.getTagsIds(this); 	
+		    },	
 
-				const url = `https://api-test.helena.run/crm/v1/panel/${panel}/custom-fields`;
-					try {
-						const response = await axios.get(url, {
-						  headers: {
-							  Accept: 'application/json',
-							  'Content-Type': 'application/json',
-							  Authorization: `Bearer ${token}`,
-						  }
-						});
-				  
-						const data = response.data;
-						const result = data.filter((field: any) => field.type != 'GROUP');
-						
-						return result.map((customFieldPanel: any) => ({
-							name: customFieldPanel.name,
-							value: customFieldPanel.key
-							})); 
-					  }
-					  catch(error) {
-						  throw new Error(`Failed to load panels: ${error.message}`);
-					  }
-			 },
+			async getUsersIds(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> {
+				 return await HelenCoreService.getUsersIds(this); 
+			},	
 
-			async getStepsPanelId(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: any }>>{
-				const credentials = await this.getCredentials('HelenaTestApi');
-				const token = credentials?.apiKey as string;
-
-				const panel = this.getNodeParameter('panels', 0) as any;
-		     //   const panelId = panel.id;
-
-				const url = `https://api-test.helena.run/crm/v1/panel/${panel}?IncludeDetails=Steps`;
-
-				let steps: {name: string, value: string}[] = [];
-				try {
-					const response = await axios.get(url, {
-						headers: {
-							Accept: 'application/json',
-							'Content-Type': 'application/json',
-							Authorization: `Bearer ${token}`,
-						}
-					});
-			
-					const data = response.data;
-					steps = data.steps;
-				} catch(error){
-					throw new ErrorEvent(`Failed to load steps: ${error.message}`);
-				}
-				return steps.map((step: any) => ({
-					name: step.title,
-					value: step.id
-					}));
-				},
-				async getTagsPanel(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: any }>>{
-					const credentials = await this.getCredentials('HelenaTestApi');
-					const token = credentials?.apiKey as string;
-
-					const panel = this.getNodeParameter('panels', 0) as any;
-		          //  const panelId = panel.id;
-                   // console.log(panelId)
-					const url = `https://api-test.helena.run/crm/v1/panel/${panel}?IncludeDetails=Tags`;
-			
-					let tags: {name: string, value: string}[] = [];
-					try {
-						const response = await axios.get(url, {
-							headers: {
-								Accept: 'application/json',
-								'Content-Type': 'application/json',
-								Authorization: `Bearer ${token}`,
-							}
-						});
-				
-						const data = response.data;
-						tags = data.tags;
-						console.log("Tgas do panel")
-						console.log(tags)
-					} catch(error){
-						throw new ErrorEvent(`Failed to load tags: ${error.message}`);
-					}
-					return tags.map((tag: any) => ({
-						name: tag.name,
-						value: tag.id
-						}));
-					},
-
-			async getDepartmentsIds(
-				this: ILoadOptionsFunctions,
-			): Promise<Array<{ name: string; value: string }>> {
-				const url = 'https://api-test.helena.run/core/v1/department';
-				const credentials = await this.getCredentials('HelenaTestApi');
-				const token = credentials?.apiKey as string;
-
-				try {
-					const response = await axios.get(url, {
-						headers: {
-							Accept: 'application/json',
-							'Content-Type': 'application/json',
-							Authorization: `Bearer ${token}`,
-						},
-					});
-
-					const departments = response.data;
-
-					return departments.map((department: { name: string; id: string }) => ({
-						name: department.name,
-						value: department.id,
-					}));
-				} catch (error) {
-					throw new Error(`Failed to load tags: ${error.message}`);
-				}
+			async getDepartmentsIds(this: ILoadOptionsFunctions): Promise<Array<{name: string, value: any}>> {
+				return await HelenCoreService.getDepartmentsIds(this);
 			},
-	
-			async getUsersByDepartments(
-				this: ILoadOptionsFunctions,
-			): Promise<Array<{ name: string; value: string }>> {
-				const url = 'https://api-test.helena.run/core/v1/agent';
+
+
+			async getUsersByDepartments(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string }>> {
 				const departmentId = this.getCurrentNodeParameter('departmentId') as string;
-				console.log('Department escolhido')
-				console.log(departmentId)
-				if (!departmentId) {
-					throw new Error(`Choose department`);
-				}
-     
 				const credentials = await this.getCredentials('HelenaTestApi');
 				const token = credentials?.apiKey as string;
-
-				try {
-					const response = await axios.get(url, {
-						headers: {
-							Accept: 'application/json',
-							'Content-Type': 'application/json',
-							Authorization: `Bearer ${token}`,
-						},
-					});
-
-					const users = response.data;
-					const result: any = [];
-					users.map((user: any) => {
-						user.departments.map((element: any) => {
-							if(element.departmentId === departmentId){
-                              result.push(user);
-							}
-						})
-					});
-					console.log('Result');
-					console.log(result);
-                     
-					return result.map((user: any) => ({
-						name: user.name,
-						value: user.userId,
-					}));
-				} catch (error) {
-					throw new Error(`Failed to load users: ${error.message}`);
-				}
+				return await HelenCoreService.getUsersByDepartments(departmentId, token);
+			},
+            
+			/*----CRM----*/
+			async getPanels(this: ILoadOptionsFunctions) :  Promise<Array<{ name: string; value: any }>> {
+				 return await HelenCrmService.getPanels(this);
 			},
 
-			 async getTemplates(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string}>> {
-			const channelId = this.getCurrentNodeParameter('channelId') as string;
-			const url = `https://api-test.helena.run/chat/v1/template?ChannelId=${channelId}`;
+			async getCustomFieldsPanel(this: ILoadOptionsFunctions): Promise<Array<{name: string, value: any}>> {
+				const panelId = this.getNodeParameter('panels') as string;
+				const credentials = await this.getCredentials('HelenaTestApi');
+				const token = credentials?.apiKey as string;
+				return await HelenCrmService.getCustomFieldsPanel(panelId, token);
+			},
+			async getStepsPanelId(this: ILoadOptionsFunctions): Promise<Array<{name:string, value: any}>> {
+				const panelId = this.getNodeParameter('panels') as string;
+				const credentials = await this.getCredentials('HelenaTestApi');
+				const token = credentials?.apiKey as string; 
+				return await HelenCrmService.getStepsPanelId(panelId, token);
+			},
+			async getTagsPanel(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: any }>> {
+				const panelId = this.getNodeParameter('panels') as string;
+				return await HelenCrmService.getTagsPanel(panelId, this);
+			},
+
 		
-			const credentials = await this.getCredentials('HelenaTestApi');
-			const token = credentials?.apiKey as string;
 
-			const result: any = [];
-			let hasMore = true;
-			let pageNumber = 0;
+			/*----CHAT----*/
+
+			async getTemplates(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string}>> {
+				const channelId = this.getCurrentNodeParameter('channelId') as string;
 		
-			while(hasMore){
-				pageNumber+=1;
-				try {
-					const response = await axios.get(url, {
-					  headers: {
-						  Accept: 'application/json',
-						  'Content-Type': 'application/json',
-						  Authorization: `Bearer ${token}`,
-					  },
-					  params: {
-						pageNumber: pageNumber
-					  }
-					});
-			  
-					console.log("pAGE number:"+pageNumber)
-					console.log("Carregando templates");
-					const data = response.data;
-					result.push(...data.items);
-					console.log(data)
-					if(!data.hasMorePages){
-						console.log("Break");
-						hasMore = false;
-					}
-					
-				  }
-				  catch(error) {
-					  throw new Error(`Failed to load tags: ${error.message}`);
-				  }
-			}
-			console.log("Reuslt")
-			console.log(result)
-			return result.map((template: any) => ({
-				name: template.name,
-				value: template
-				}));
-			
-		},
-		 async getNameTemplates(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string }>> {
-			const template = this.getCurrentNodeParameter('templates') as {name: string};
-			const templateName = template.name;
-			const channelId = this.getCurrentNodeParameter('channelId') as string;
-			const url = `https://api-test.helena.run/chat/v1/template?ChannelId=${channelId}&IncludeDetails=Params&PageSize=100`;
+				const credentials = await this.getCredentials('HelenaTestApi');
+				const token = credentials?.apiKey as string;
+         		return await HelenChatService.getTemplates(channelId, token);
+			},
+
+			async getNameTemplates(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string }>> {
+				const template = this.getCurrentNodeParameter('templates') as string;
+				
+				const channelId = this.getCurrentNodeParameter('channelId') as string;
 		  
-			const credentials = await this.getCredentials('HelenaTestApi');
-			const token = credentials?.apiKey as string;
-		    console.log("Nome do Templaete: " + templateName)
-			console.log("ChannelId: " + channelId)
-			console.log("url: " + url)
+				const credentials = await this.getCredentials('HelenaTestApi');
+				const token = credentials?.apiKey as string;
+				return await HelenChatService.getNameTemplates(template, channelId, token);
+			},
 
-			try {
+			async getChannelsIds(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> { 
+				return await HelenChatService.getChannelsIds(this); 
+			},
 
-			  const response = await axios.get(url, {
-				headers: {
-				  Accept: 'application/json',
-				  'Content-Type': 'application/json',
-				  Authorization: `Bearer ${token}`,
-				},
-				params : {
-					name: templateName 
-				}
-			  });
-		  
-			  const data = response.data;
-		  
-			  const result = data.items.flatMap((x: any) => x.params?.map((p: any) => ({
-				name: p.name,
-				value: p.name
-			  })));
-			  console.log("Result do name")
-			  console.log(result);
-			  return result
-			} catch (error) {
-			  throw new Error(`Failed to load template parameters: ${error.message}`);
-			}
-		}
-
-
-			
+			async getBots(this: ILoadOptionsFunctions) : Promise<Array<{ name: string; value: string }>> { 
+				return await HelenChatService.getBots(this); 
+			},
+		
 		},
 	};
 
@@ -1508,7 +1324,32 @@ export class HelenaTest implements INodeType {
 			const items: INodeExecutionData[] = [ { json: data } ];
 			results[0] = items;
 
-		} else if (resource === 'contact' && operation === 'getAllContacts') {
+		} else if(resource === 'contact' && operation === 'getContactByPhone'){
+			 const phoneNumber = this.getNodeParameter('phonenumber', 0) as string;
+             const url = `https://api-test.helena.run/core/v1/contact/phonenumber/${phoneNumber}`;
+
+			 try {
+				const response = await axios.get(url, {
+					headers: {
+						Accept: 'application/json',
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${token}`,
+					},
+				});
+
+				const data = response.data;
+				console.log('Data');
+				console.log(data);
+				const items: INodeExecutionData[] = [{json: data,},];
+				results[0] = items;
+			 }
+			 catch(error) {
+				console.log("Error");
+				throw new Error(`API request failed: ${error.message}`);
+			 } 
+			
+		}
+		 else if (resource === 'contact' && operation === 'getAllContacts') {
 			const pageNumber = this.getNodeParameter('pageNumber', 0) as number;
 			const pageSize = this.getNodeParameter('pageSize', 0) as number;
 			const orderBy = this.getNodeParameter('orderBy', 0) as string;
@@ -2136,6 +1977,8 @@ export class HelenaTest implements INodeType {
 			});
 			return { parameters: result };
 		  };
+		  console.log("Unique Params");
+		  console.log(uniqueParams)
 		  
 		const body = {
 			from: from,
