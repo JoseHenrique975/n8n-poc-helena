@@ -105,6 +105,47 @@ static async getTemplates(channelId: string, token: string): Promise<Array<{ nam
         }));
 }
 
+static async getTemplateIds(channelId: string, token: string, nameTemplate: string): Promise<{id: string}> {
+  const url = `https://api-test.helena.run/chat/v1/template?ChannelId=${channelId}`;
+
+  const result: any = [];
+  let hasMore = true;
+  let pageNumber = 0;
+
+  while(hasMore){
+      pageNumber+=1;
+      try {
+          const response = await axios.get(url, {
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            params: {
+              pageNumber: pageNumber
+            }
+          });
+    
+          console.log("pAGE number:"+pageNumber)
+          console.log("Carregando templates");
+          const data = response.data;
+          result.push(...data.items);
+          console.log(data)
+          if(!data.hasMorePages){
+              console.log("Break");
+              hasMore = false;
+          }
+          
+        }
+        catch(error) {
+            throw new Error(`Failed to load tags: ${error.message}`);
+        }
+  }
+  
+  const resultObj = result.find((item: any) => item.name === nameTemplate);
+  return resultObj;
+}
+
 static async getNameTemplates(templateName: string, channelId: string, token: string): Promise<Array<{ name: string; value: string }>> {
     const url = `https://api-test.helena.run/chat/v1/template?ChannelId=${channelId}&IncludeDetails=Params&PageSize=100`;
   

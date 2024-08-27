@@ -11,7 +11,7 @@ export class HelenaTest implements INodeType {
 		name: 'HelenaTest',
 		icon: 'file:images/wtslogo.svg',
 		group: ['transform'],
-		version: 1,
+		version: [1],
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description: 'Get data from Wts API',
 		defaults: {
@@ -52,7 +52,7 @@ export class HelenaTest implements INodeType {
 						value: 'panel'
 					}
 				],
-				default: 'message',
+				default: '',
 				description: 'Resource to use.',
 			},
 
@@ -456,7 +456,7 @@ export class HelenaTest implements INodeType {
 				displayName: 'Upsert',
 				name: 'upsert',
 				type: 'boolean',
-				default: '',
+				default: false,
 				description:
 					'With this option enabled, if the contact already exists in the database, it will be updated with the new data and returned.',
 				displayOptions: {
@@ -470,7 +470,7 @@ export class HelenaTest implements INodeType {
 				displayName: 'Get If Exists?',
 				name: 'getIfExists',
 				type: 'boolean',
-				default: '',
+				default: false,
 				description:
 					'With this option enabled, if the contact already exists in the database, it will be returned and no data will be updated',
 				displayOptions: {
@@ -729,9 +729,7 @@ export class HelenaTest implements INodeType {
 							},
 						}],
 					}
-				]
-				
-					
+				]	
 			},
 
 			{
@@ -1284,6 +1282,14 @@ export class HelenaTest implements INodeType {
          		return await HelenChatService.getTemplates(channelId, token);
 			},
 
+			async getTemplatesIds(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string}>> {
+				const channelId = this.getCurrentNodeParameter('channelId') as string;
+		
+				const credentials = await this.getCredentials('HelenaTestApi');
+				const token = credentials?.apiKey as string;
+         		return await HelenChatService.getTemplates(channelId, token);
+			},
+
 			async getNameTemplates(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string }>> {
 				const template = this.getCurrentNodeParameter('templates') as string;
 				
@@ -1314,8 +1320,7 @@ export class HelenaTest implements INodeType {
 		const credentials = await this.getCredentials('HelenaTestApi');
 		const token = credentials?.apiKey as string;
 
-		//const baseURL = 'https://api-test.helena.run';
-
+		const baseURL = 'https://api-test.helena.run';
 
 		if (resource === 'contact' && operation === 'getContactById') {
 			const idContact = this.getNodeParameter('contactId', 0) as string;
@@ -1326,7 +1331,7 @@ export class HelenaTest implements INodeType {
 
 		} else if(resource === 'contact' && operation === 'getContactByPhone'){
 			 const phoneNumber = this.getNodeParameter('phonenumber', 0) as string;
-             const url = `https://api-test.helena.run/core/v1/contact/phonenumber/${phoneNumber}`;
+             const url = `${baseURL}/core/v1/contact/phonenumber/${phoneNumber}`;
 
 			 try {
 				const response = await axios.get(url, {
@@ -1338,8 +1343,6 @@ export class HelenaTest implements INodeType {
 				});
 
 				const data = response.data;
-				console.log('Data');
-				console.log(data);
 				const items: INodeExecutionData[] = [{json: data,},];
 				results[0] = items;
 			 }
@@ -1347,28 +1350,25 @@ export class HelenaTest implements INodeType {
 				console.log("Error");
 				throw new Error(`API request failed: ${error.message}`);
 			 } 
-			
-		}
-		 else if (resource === 'contact' && operation === 'getAllContacts') {
+
+		} else if (resource === 'contact' && operation === 'getAllContacts') {
 			const pageNumber = this.getNodeParameter('pageNumber', 0) as number;
 			const pageSize = this.getNodeParameter('pageSize', 0) as number;
 			const orderBy = this.getNodeParameter('orderBy', 0) as string;
 			const orderDirection = this.getNodeParameter('orderDirection', 0) as string;
 
 			//const endpoint = '/core/v1/contact';
-			const url = 'https://api-test.helena.run/core/v1/contact';
-
-			console.log('Url é essa: ' + url);
+			const url = `${baseURL}/core/v1/contact`;
 
 			const credentials = await this.getCredentials('HelenaTestApi');
 			const token = credentials?.apiKey as string;
-			console.log('Esse é token' + token);
+
 			console.log('Page size' + pageSize);
 			console.log('Page Number ' + pageNumber);
 			console.log('Order by' + orderBy);
 			console.log('Order direction ' + orderDirection);
+
 			try {
-				console.log('Entrei no TRY');
 				const response = await axios.get(url, {
 					headers: {
 						Accept: 'application/json',
@@ -1382,6 +1382,7 @@ export class HelenaTest implements INodeType {
 						orderDirection,
 					},
 				});
+
 				console.log('Response: ');
 				console.log(response);
 				const data = response.data;
@@ -1397,8 +1398,9 @@ export class HelenaTest implements INodeType {
 				console.log(error);
 				throw new Error(`API request failed: ${error.message}`);
 			}
+
 		} else if (resource === 'contact' && operation === 'createContact') {
-			const url = 'https://api-test.helena.run/core/v1/contact';
+			const url = `${baseURL}/core/v1/contact`;
 
 			const name = this.getNodeParameter('name', 0) as string;
 			const email = this.getNodeParameter('email', 0) as string;
@@ -1412,8 +1414,14 @@ export class HelenaTest implements INodeType {
 			const metadata = this.getNodeParameter('metadata', 0) as {
 				metadata: { key: string; value: string }[];
 			};
-			//const upsert = this.getNodeParameter('upsert', 0) as boolean;
-			// const getIfExists = this.getNodeParameter('getIfExists', 0) as boolean;
+
+			 const upsert = this.getNodeParameter('upsert', 0) as boolean;
+			 const getIfExists = this.getNodeParameter('getIfExists', 0) as boolean;
+
+			 console.log("Updsert: ")
+			 console.log(upsert);
+			 console.log("Get If Exists");
+			 console.log(getIfExists);
 
 			const regexEmail = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
 			const matchEmail = email.match(regexEmail);
@@ -1422,13 +1430,7 @@ export class HelenaTest implements INodeType {
 				throw new Error('Email inválido!');
 			}
 
-			//   const tagIdsObject = tagsIds.reduce((acc, field) => {
-			//	acc[field.key] = field.value;
-			//	return acc;
-			//  }, {} as { [key: string]: string });
-
-			//vou fazer o mesmo com o metadata e funciona
-			const customFieldsObject = customFields.customFields.reduce(
+			const customFieldsObject = customFields?.customFields?.reduce(
 				(acc: { [key: string]: string }, field) => {
 					acc[field.key] = field.value;
 					return acc;
@@ -1436,7 +1438,7 @@ export class HelenaTest implements INodeType {
 				{},
 			);
 
-			const metadataObject = metadata.metadata.reduce(
+			const metadataObject = metadata?.metadata?.reduce(
 				(acc: { [key: string]: string }, metadata) => {
 					acc[metadata.key] = metadata.value;
 					return acc;
@@ -1444,26 +1446,23 @@ export class HelenaTest implements INodeType {
 				{},
 			);
 
-		const body = {
+			const body = {
 				name: name,
 				email: email,
 				phonenumber: phonenumber,
 				instagram: instagram,
 				annotation: annotation,
-				customFields: customFieldsObject,
 				tagIds: tagIds,
-				metadata: metadataObject,
+				...(metadataObject && { metadata: metadataObject}),
+				...(customFieldsObject && { customFields: customFieldsObject}),
+
+				options: {
+					...(upsert && { upsert: upsert}),
+					...(getIfExists && { getIfExists: getIfExists}),
+				}
 			}
 
-			console.log('MetadaObject');
-			console.log(metadataObject);
-
 			try {
-				console.log('Entrei no TRY');
-				console.log(customFieldsObject);
-				console.log(tagIds);
-				console.log('Token');
-				console.log(token);
 
 				const response = await axios.post(url, body, {
 					headers: {
@@ -1471,28 +1470,13 @@ export class HelenaTest implements INodeType {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${token}`,
 					},
-					/*
-					body: {
-						name: name,
-						email: email,
-						phonenumber: phonenumber,
-						instagram: instagram,
-						annotation: annotation,
-						customFields: customFieldsObject,
-						tagIds: tagIds,
-						metadata: metadataObject,
-					},
-					*/
 				});
 
 				console.log(tagIds);
 				console.log(customFields);
 				const data = response.data;
-				console.log('Response: ');
+				console.log("Resposta da requisição: ")
 				console.log(data);
-				console.log('Metadata variavel');
-				console.log(metadata);
-				console.log('Metadata object');
 
 				const items: INodeExecutionData[] = [
 					{
@@ -1508,7 +1492,7 @@ export class HelenaTest implements INodeType {
 		} else if (resource === 'message' && operation === 'getMessageById') {
 			const idMessage = this.getNodeParameter('messageId', 0) as string;
 
-			const urlMessage = `https://api-test.helena.run/chat/v1/message/${idMessage}`;
+			const urlMessage = `${baseURL}/chat/v1/message/${idMessage}`;
 
 			try {
 				const response = await axios.get(urlMessage, {
@@ -1522,11 +1506,7 @@ export class HelenaTest implements INodeType {
 				const data = response.data;
 				console.log('Data');
 				console.log(data);
-				const items: INodeExecutionData[] = [
-					{
-						json: data,
-					},
-				];
+				const items: INodeExecutionData[] = [{json: data,},];
 				results[0] = items;
 			} catch (error) {
 				console.log('Error ');
@@ -1536,7 +1516,7 @@ export class HelenaTest implements INodeType {
 		} else if (resource === 'message' && operation === 'getMessageStatus') {
 			const idMessage = this.getNodeParameter('messageId', 0) as string;
 
-			const urlMessage = `https://api-test.helena.run/chat/v1/message/${idMessage}/status`;
+			const urlMessage = `${baseURL}/chat/v1/message/${idMessage}/status`;
 
 			try {
 				const response = await axios.get(urlMessage, {
@@ -1573,7 +1553,7 @@ export class HelenaTest implements INodeType {
 			const updatedAtAfter = this.getNodeParameter('updatedAtAfter', 0) as string;
 			const updatedAtBefore = this.getNodeParameter('updatedAtBefore', 0) as string;
 
-			const urlMessage = `https://api-test.helena.run/chat/v1/message`;
+			const urlMessage = `${baseURL}/chat/v1/message`;
 
 			console.log('Created At After:');
 			console.log(createdAtAfter);
@@ -1630,10 +1610,7 @@ export class HelenaTest implements INodeType {
 			const hiddenSession = this.getNodeParameter('hiddenSession', 0) as boolean;
 			const forceStartSession = this.getNodeParameter('forceStartSession', 0) as boolean;
 
-			const urlSendMessage = 'https://api-test.helena.run/chat/v1/message/send';
-
-			//const tokenTest = 'pn_vmVJQzRt02j47PwKt7VD754nDLRYL2LFgrnOIhC3g'; // Substitua com o token de autenticação adequado
-		    
+			const urlSendMessage = `${baseURL}/chat/v1/message/send`;
 
             const body = {
                 from: from,
@@ -1653,39 +1630,12 @@ export class HelenaTest implements INodeType {
 				 ...(sessionId && { sessionId: sessionId }),
 				 ...(botId && { botId: botId }),
 				 ...(userId && { user: { id: userId } }),
-				// ...(typeof enableBot === 'boolean' && { options: { enableBot } }),
-				// ...(typeof hiddenSession === 'boolean' && { options: { hiddenSession } }),
-				// ...(typeof forceStartSession === 'boolean' && { options: { forceStartSession } })
 			 }
 
 			 console.log("Body")
 			 console.log(body);
-			 
-
-                /*
-				department: {
-					id: departmentId
-				},
-				user: {
-					id: userId
-				},
-				options: {
-					enableBot: enableBot,
-					hiddenSession: hiddenSession,
-					forceStartSession: forceStartSession
-				}	
-				*/			
-            
-
-		
-
-			console.log('From');
-			console.log(from);
-			console.log('to');
-			console.log(to);
 
 			try {
-
 
 				const response = await axios.post(urlSendMessage, body, {
                     headers: {
@@ -1694,22 +1644,6 @@ export class HelenaTest implements INodeType {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-				/*
-				const response = await axios.post(urlSendMessage, {
-					headers: {
-						Accept: 'application/json',
-						'Content-Type': 'application/json',
-						Authorization: `Bearer ${token}`,
-					},
-					body: {
-						from: from,
-						to: to,
-						body: {
-							text: text,
-						},
-					},
-				});
-				*/
 
                 console.log("Response")
 				console.log(response)
@@ -1726,6 +1660,7 @@ export class HelenaTest implements INodeType {
 				console.log(error);
 				throw new Error(`API request failed: ${error.message}`);
 			}
+
 		} else if (resource === 'session' && operation === 'getAllSessions') {
 			const pageNumber = this.getNodeParameter('pageNumber', 0) as number;
 			const pageSize = this.getNodeParameter('pageSize', 0) as number;
@@ -1749,41 +1684,15 @@ export class HelenaTest implements INodeType {
 			const contactId = this.getNodeParameter('contactId', 0) as string;
 			const includeDetails = this.getNodeParameter('includeDetails', 0) as Array<string>;
 
-			let urlSession = 'https://api-test.helena.run/chat/v1/session';
+			let urlSession = `${baseURL}/chat/v1/session`;
 			
-
-			const params = new URLSearchParams({
-			//	status: statusSession.join(','),
-			//	departmentId,
-			//	userId,
-			//	tagsId: tagIds.join(','),
-			//	contactId,
-			//	includeDetails: includeDetails.join(','),
-			//	pageNumber: pageNumber.toString(),
-			//	pageSize: pageSize.toString(),
-		//		orderBy,
-			//	orderDirection,
-			//	'CreatedAt.After': createdAtAfter,
-			//	'CreatedAt.Before': createdAtBefore,
-			//	'UpdatedAt.After': updatedAtAfter,
-			//	'UpdatedAt.Before': updatedAtBefore,
-			//	"ActiveAt.After": activeAtAfter,
-			//	"ActiveAt.Before": activeAtBefore,
-			//	"EndAt.After": endAtAfter,
-			//	"EndAt.Before": endAtBefore,
-			});
+			const params = new URLSearchParams({});
 
 			channelsIds.forEach(id => params.append('ChannelsId', id));
 			statusSession.forEach(status => params.append('Status', status));
 			includeDetails.forEach(details => params.append('IncludeDetails', details));
-			// Construct full URL with query parameters
-			urlSession += `?${params.toString()}`;
-		
-			console.log("Page Size")
-			console.log(pageSize);
 
-			console.log("Channels")
-			console.log(channelsIds)
+			urlSession += `?${params.toString()}`;
 			
 			try {
 				console.log('Entrando no try')
@@ -1798,10 +1707,8 @@ export class HelenaTest implements INodeType {
 						departmentId: departmentId,
 						userId: userId,
 						tagsId: tagIds,
-						//channelsId: channelsIds,
 						contactId: contactId,
 						includeDetails: includeDetails,
-
 
 						pageNumber: pageNumber,
 						pageSize: pageSize,
@@ -1841,7 +1748,7 @@ export class HelenaTest implements INodeType {
 		  const orderBy = this.getNodeParameter('orderBy', 0) as string;
 		  const orderDirection = this.getNodeParameter('orderDirection', 0) as string;
 
-          const url = `https://api-test.helena.run/crm/v1/panel/card/${cardId}/note`;
+          const url = `${baseURL}/crm/v1/panel/card/${cardId}/note`;
           
 		  try {
 
@@ -1889,7 +1796,7 @@ export class HelenaTest implements INodeType {
 			const hiddenSession = this.getNodeParameter('hiddenSession', 0) as boolean;
 			const forceStartSession = this.getNodeParameter('forceStartSession', 0) as boolean;
              
-			const url = 'https://api-test.helena.run/chat/v1/message/send'
+			const url = `${baseURL}/chat/v1/message/send`;
 			const body = {
                 from: from,
                 to: to,
@@ -1906,7 +1813,6 @@ export class HelenaTest implements INodeType {
 				...(sessionId && { sessionId: sessionId }),
 				...(botId && { botId: botId }),
 				...(userId && { user: { id: userId } }),
-				
 		}
 
 		try {
@@ -1932,41 +1838,47 @@ export class HelenaTest implements INodeType {
 			console.log(error);
 			throw new Error(`API request failed: ${error.message}`);
 		}
-	}
-	else if(resource === 'message' && operation === 'sendMessageTemplate'){
+	} else if(resource === 'message' && operation === 'sendMessageTemplate'){
+		/*Get parameters*/
 	   const from = this.getNodeParameter('channelId', 0) as string;
-	   const template = this.getNodeParameter('templates', 0) as {id: string};
-	   const templateId = template.id;
-	   console.log(templateId)
+	   const template = this.getNodeParameter('templates', 0) as string;
+	   let templateObj = null;
+
+	   if(template){
+         templateObj = await HelenChatService.getTemplateIds(from, token, template);
+	   }
+
+	   const templateId = templateObj?.id;
+
 	   const paramsTemplates = this.getNodeParameter('paramsTemplates', 0) as { paramsTemplatesValues: { name: string, value: string }[] };
 	   const paramsArray = paramsTemplates.paramsTemplatesValues;
 	   const to = this.getNodeParameter('numberToSend', 0) as string;
 
-			const departmentId = this.getNodeParameter('departmentId', 0) as string;
-			const sessionId = this.getNodeParameter('sessionId', 0) as string;
-			const userId = this.getNodeParameter('userIdByDepartment', 0) as string;
-			const botId = this.getNodeParameter('botId', 0) as string;
+	   const departmentId = this.getNodeParameter('departmentId', 0) as string;
+	   const sessionId = this.getNodeParameter('sessionId', 0) as string;
+	   const userId = this.getNodeParameter('userIdByDepartment', 0) as string;
+	   const botId = this.getNodeParameter('botId', 0) as string;
 
-			const enableBot = this.getNodeParameter('enableBot', 0) as boolean;
-			const hiddenSession = this.getNodeParameter('hiddenSession', 0) as boolean;
-			const forceStartSession = this.getNodeParameter('forceStartSession', 0) as boolean;
-	     
-
+	   const enableBot = this.getNodeParameter('enableBot', 0) as boolean;
+       const hiddenSession = this.getNodeParameter('hiddenSession', 0) as boolean;
+	   const forceStartSession = this.getNodeParameter('forceStartSession', 0) as boolean;
+	    
 	   const nameSet = new Set<string>(); 
        const uniqueParams: { name: string, value: string }[] = [];
-    if (Array.isArray(paramsArray)) {
-        paramsArray.forEach(param => {
+
+	   /*Manipulate data*/
+
+   	    if (Array.isArray(paramsArray)) {
+          paramsArray.forEach(param => {
             const { name, value } = param;
 
             if (!nameSet.has(name)) {
                 nameSet.add(name);
                 uniqueParams.push({ name, value });
             }
-        });
-		//results[0] = [{ json: { uniqueParams } }];
-	}
-
-    else {
+         });
+	    }
+        else {
 		   results[0] = [{ json: { error: 'No paramsTemplates found' } }];
 	    }
 
@@ -1977,6 +1889,7 @@ export class HelenaTest implements INodeType {
 			});
 			return { parameters: result };
 		  };
+
 		  console.log("Unique Params");
 		  console.log(uniqueParams)
 		  
@@ -1998,9 +1911,12 @@ export class HelenaTest implements INodeType {
 			...(botId && { botId: botId }),
 			...(userId && { user: { id: userId } }),
 			...(departmentId && { department: { id: departmentId } })	
-		
-	}
-	const url = 'https://api-test.helena.run/chat/v1/message/send'
+		}
+
+	   /*Request*/
+
+		const url = `${baseURL}/chat/v1/message/send`;
+
 		try {
 			const response = await axios.post(url, body, {
 				headers: {
@@ -2009,6 +1925,7 @@ export class HelenaTest implements INodeType {
 					Authorization: `Bearer ${token}`,
 				},
 			  });
+
               console.log(body)
 			  const data = response.data;
 			  console.log('Resposta do envio de template:');
@@ -2026,9 +1943,9 @@ export class HelenaTest implements INodeType {
 	   
    
 	   // Verificar se o número de parâmetros fornecidos excede o máximo permitido
-	  // if (paramsTemplates.paramsTemplatesValues.length > maxParams) {
-	//	   throw new Error(`Cannot add more than ${maxParams} parameters. You have exceeded the allowed limit.`);
-	  // }
+	   // if (paramsTemplates.paramsTemplatesValues.length > maxParams) {
+	   //	   throw new Error(`Cannot add more than ${maxParams} parameters. You have exceeded the allowed limit.`);
+	   // }
    
 		
 	} else if(resource === 'panel' && operation === 'createCard'){
@@ -2049,8 +1966,6 @@ export class HelenaTest implements INodeType {
 			metadata: { key: string; value: string }[];
 		};
   
-		console.log("CustomFields")
-		console.log(customFields)
 		 const customFieldsObject = customFields?.customFields?.reduce(
 		 	(acc: { [key: string]: string }, field) => {
 		 		acc[field.key] = field.value;
@@ -2066,8 +1981,6 @@ export class HelenaTest implements INodeType {
 	//		customFieldsObject.set(field.key, field.value)
 	//	});
 
-		console.log("Metadata")
-		console.log(metadata)
 		const metadataObject = metadata?.metadata?.reduce(
 			(acc: { [key: string]: string }, metadata) => {
 				acc[metadata.key] = metadata.value;
@@ -2098,7 +2011,7 @@ export class HelenaTest implements INodeType {
 			...(customFieldsObject && { customFields: customFieldsObject}),
 	    }
 
-	const url = 'https://api-test.helena.run/crm/v1/panel/card';
+	const url = `${baseURL}/crm/v1/panel/card`;
 
 	console.log("Body")
 	console.log(body);
@@ -2112,7 +2025,6 @@ export class HelenaTest implements INodeType {
 				},
 			  });
 
-              console.log(body)
 			  const data = response.data;
 			  console.log('Resposta do envio de card:');
 			  console.log(data);
@@ -2128,7 +2040,7 @@ export class HelenaTest implements INodeType {
 			throw new Error(`API request failed: ${error.message}`);
 		}
 		
-	} else if(resource === 'panel' && operation === 'createAnnotationText'){
+	} else if(resource === 'panel' && operation === 'createAnnotationText') {
 		const cardId = this.getNodeParameter('cardId', 0) as string;
 		const annotation = this.getNodeParameter('textMessage', 0) as string;
 
@@ -2139,7 +2051,7 @@ export class HelenaTest implements INodeType {
 			throw new Error('Annotation is empty, please fill it in');
 		}
 
-		const url = `https://api-test.helena.run/crm/v1/panel/card/${cardId}/note`;
+		const url = `${baseURL}/crm/v1/panel/card/${cardId}/note`;
 		const body = {
           text: annotation
 		}
@@ -2183,7 +2095,7 @@ export class HelenaTest implements INodeType {
 			throw new Error('URL File is empty, please fill it in');
 		}
 
-		const url = `https://api-test.helena.run/crm/v1/panel/card/${cardId}/note`;
+		const url = `${baseURL}/crm/v1/panel/card/${cardId}/note`;
 
 		const body = {
           fileUrls: arrayUrls
@@ -2226,7 +2138,7 @@ export class HelenaTest implements INodeType {
 			throw new Error('Choose one department or user to transfer the conversation');
 		}
 */
-		const url = `https://api-test.helena.run/chat/v1/session/${sessionId}/transfer`;
+		const url = `${baseURL}/chat/v1/session/${sessionId}/transfer`;
 		let type = departmentId && userId ? 'USER' : 'DEPARTMENT';
 
 		const body = {
@@ -2256,32 +2168,28 @@ export class HelenaTest implements INodeType {
 	
 			   results[0] = items;
 			   return results;
+		}
+		catch(error){
+			console.log("Error")
+			console.log(error);
+			throw new Error(`API request failed: ${error.message}`);
+		}
+    }
+	else if(resource === 'session' && operation === 'updateStatusSession') {
+      const sessionId = this.getNodeParameter('sessionId', 0) as string;
+      const status = this.getNodeParameter('statusSessionOption', 0) as string;
+
+ 	 if(!sessionId && !status){
+		throw new Error(`API request failed: Fill in all fields`);
+ 	 }
+
+ 	const url = `${baseURL}/chat/v1/session/${sessionId}/status`;
+	const body = {
+		newStatus: status
 	}
-	catch(error){
-		console.log("Error")
-		console.log(error);
-		throw new Error(`API request failed: ${error.message}`);
-	}
-}
 
-else if(resource === 'session' && operation === 'updateStatusSession') {
- const sessionId = this.getNodeParameter('sessionId', 0) as string;
- const status = this.getNodeParameter('statusSessionOption', 0) as string;
-
- if(!sessionId && !status){
-	throw new Error(`API request failed: Fill in all fields`);
- }
-
- const url = `https://api-test.helena.run/chat/v1/session/${sessionId}/status`;
- const body = {
-	newStatus: status
-}
-
-console.log(url)
-console.log(body)
-
- try {
-	const response = await axios.put(url, body, {
+ 	try {
+		const response = await axios.put(url, body, {
 		headers: {
 			Accept: 'application/json',
 			'Content-Type': 'application/json',
@@ -2298,17 +2206,13 @@ console.log(body)
 
 	   results[0] = items;
 	   return results;
+	}
+	catch(error){
+		console.log("Error")
+		console.log(error);
+		throw new Error(`API request failed: ${error.message}`);
+	}
 }
-catch(error){
-console.log("Error")
-console.log(error);
-throw new Error(`API request failed: ${error.message}`);
-}
-
-
-}
-
-		//console.log(results);
 		return results;
 	}
 }
